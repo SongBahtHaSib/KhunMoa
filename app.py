@@ -39,30 +39,24 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 # ----------------------------------------------------------------------
-# 2. โหลดโมเดล AI ของคุณ (.keras หรือ .h5 file)
+# 2. โหลดโมเดล AI ของคุณ (.tflite file)
 # ----------------------------------------------------------------------
-# สมมติว่าไฟล์โมเดลอยู่ในโฟลเดอร์เดียวกันกับ app.py
-# ตรวจสอบให้แน่ใจว่าชื่อไฟล์และนามสกุลตรงกับไฟล์โมเดลที่คุณมี
-MODEL_PATH = 'khunmoa_skin_diagnosis_final_model.keras' # หรือ 'khunmoa_skin_diagnosis_final_model.h5'
+# เปลี่ยน Path ให้ชี้ไปที่ไฟล์ .tflite
+MODEL_PATH = 'khunmoa_skin_diagnosis_final_model.tflite'
 
 try:
-    # เมื่อโหลดไฟล์ .keras มักจะไม่ต้องใช้ custom_objects
-    # แต่ถ้าคุณยังเจอ Error 'Unknown layer: 'TrueDivide'' หรืออื่นๆ
-    # และคุณแน่ใจว่า TrueDivide มาจาก Layer Preprocessing เช่น Rescaling หรือ Normalization
-    # คุณอาจจะต้องระบุ custom_objects อีกครั้ง
-    # ตัวอย่าง:
-    # custom_objects = {
-    #     'Rescaling': tf.keras.layers.Rescaling,
-    #     'Normalization': tf.keras.layers.Normalization
-    # }
-    # model = tf.keras.models.load_model(MODEL_PATH, custom_objects=custom_objects)
+    # โหลด TFLite model โดยใช้ tf.lite.Interpreter
+    interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
+    interpreter.allocate_tensors() # ต้องเรียก allocate_tensors() เสมอ
 
-    model = tf.keras.models.load_model(MODEL_PATH)
-    print("Model loaded successfully!")
-    # model.summary() # สามารถรันบรรทัดนี้เพื่อดูสรุปโครงสร้างโมเดลได้ (สำหรับการ Debug)
+    # ดึงรายละเอียด Input และ Output ของโมเดล TFLite
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    print("TFLite Model loaded successfully!")
 except Exception as e:
-    print(f"Error loading model from {MODEL_PATH}: {e}")
-    model = None # ตั้งค่าโมเดลเป็น None ถ้าโหลดไม่ได้ เพื่อป้องกัน Error ภายหลัง
+    print(f"Error loading TFLite model from {MODEL_PATH}: {e}")
+    interpreter = None # ตั้งค่าเป็น None ถ้าโหลดไม่ได้
 
 # ----------------------------------------------------------------------
 # 3. กำหนดชื่อ Class (ต้องเรียงลำดับให้ตรงกับตอนที่คุณฝึกโมเดล!)
@@ -80,7 +74,7 @@ class_names = [
 # 4. ฟังก์ชันสำหรับการรับ Webhook จาก LINE
 # ----------------------------------------------------------------------
 # นี่คือ Endpoint ที่ LINE จะส่งข้อมูล (ข้อความ, รูปภาพ) มาให้ Chatbot ของคุณ
-@app.route("/callback", methods=['GET', 'POST'])
+@app.route("/callback", methods=['GET', 'POST']) # รับทั้ง GET และ POST
 def callback():
     # ดึงค่า X-Line-Signature จาก Header เพื่อยืนยันว่าเป็น Request จาก LINE จริงๆ
     signature = request.headers.get('X-Line-Signature') # ใช้ .get() เพื่อป้องกัน Error ถ้าไม่มี Signature ใน GET Request
@@ -136,8 +130,7 @@ def handle_text_message(event):
 # เมื่อผู้ใช้ส่งรูปภาพ (Image Message) เข้ามา
 @handler.add(MessageEvent, message=ImageMessage)
 def handle_image_message(event):
-    # ตรวจสอบว่าโมเดลโหลดสำเร็จหรือไม่
-    if model is None:
+    if interpreter is None: # ตรวจสอบ interpreter แทน model
         line_bot_api.reply_message(
             event.reply_token,
             TextMessage(text="ขออภัยครับ โมเดล AI ยังไม่พร้อมให้บริการ โปรดแจ้งผู้ดูแลระบบ")
@@ -166,14 +159,19 @@ def handle_image_message(event):
         img_array = np.expand_dims(img_array, axis=0)
 
         # ----------------------------------------------------------------
-        # Predict (ส่งรูปภาพให้โมเดล AI ทำนาย)
+        # Predict ด้วย TFLite Interpreter
         # ----------------------------------------------------------------
-        predictions = model.predict(img_array)
-        # หา Index ของคลาสที่มีค่าความน่าจะเป็นสูงสุด
+        # กำหนด Input Tensor
+        interpreter.set_tensor(input_details[0]['index'], img_array.astype(input_details[0]['dtype']))
+        
+        # รัน Inference
+        interpreter.invoke()
+        
+        # ดึง Output Tensor
+        predictions = interpreter.get_tensor(output_details[0]['index'])
+        
         predicted_class_index = np.argmax(predictions[0])
-        # หาค่าความน่าจะเป็นสูงสุด (Confidence Score)
         confidence = np.max(predictions[0])
-        # แปลง Index ของคลาสกลับไปเป็นชื่อคลาส
         predicted_class_name = class_names[predicted_class_index]
 
         # ----------------------------------------------------------------
