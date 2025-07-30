@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "wsgi_app.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.9"  // <--- เพิ่มบรรทัดนี้: กำหนดให้ใช้ Python 3.9
+      }
     }
   ],
   "routes": [
