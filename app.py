@@ -201,10 +201,4 @@ def handle_image_message(event):
 # 7. ส่วนสำหรับรัน Flask App
 # ----------------------------------------------------------------------
 # บล็อกโค้ดนี้จะรันเมื่อไฟล์ app.py ถูกรันโดยตรง (เช่น python app.py)
-# แต่เมื่อถูก import ใน Colab หรือรันโดย Gunicorn บน Heroku/Render บล็อกนี้จะไม่ทำงาน
-if __name__ == "__main__":
-    # Render.com หรือ Heroku จะกำหนด PORT ให้โดยอัตโนมัติผ่าน Environment Variable
-    # ถ้าไม่มี PORT กำหนด ให้ใช้ 5000 เป็นค่าเริ่มต้น
-    port = int(os.environ.get("PORT", 5000))
-    # รัน Flask App บน Host 0.0.0.0 (เข้าถึงได้จากภายนอก) และ Port ที่กำหนด
-    app.run(host='0.0.0.0', port=port)
+
