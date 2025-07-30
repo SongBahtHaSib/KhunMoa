@@ -20,8 +20,8 @@ app = Flask(__name__)
 # ดึงค่า Channel Access Token และ Channel Secret จาก Environment Variables
 # นี่เป็นวิธีที่ปลอดภัยกว่าการใส่ค่าลงในโค้ดโดยตรง
 # เมื่อรันบน Render.com หรือบนเครื่องของคุณ (โดยการตั้งค่า os.environ หรือ set/export)
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', None)
-LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET', None)
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv('+ejYKoOlgc2wwEki1alzwDcWGSXoAkd2f+XEWDORDo4pNjt8yvlNVvd80EEXdzkwEP5FxWj+f6UOiXbDyM9BOhfRyfrU42EFkV+XKk1M8EEQdRU2RyE6QCi+lRqpVmGrJCJ8NbfOCWdFaN1Q3qv51gdB04t89/1O/w1cDnyilFU=', None)
+LINE_CHANNEL_SECRET = os.getenv('b53014031bc26ccf4683475d5f13470e', None)
 
 # ตรวจสอบว่าได้ตั้งค่า Token/Secret แล้วหรือไม่
 if LINE_CHANNEL_ACCESS_TOKEN is None or LINE_CHANNEL_SECRET is None:
