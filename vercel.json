@@ -3,7 +3,11 @@
   "builds": [
     {
       "src": "wsgi_app.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb", // เพิ่มบรรทัดนี้: กำหนดขนาด Lambda Function สูงสุด (สำหรับโมเดล)
+        "runtime": "python3.9"   // เพิ่มบรรทัดนี้: กำหนดเวอร์ชัน Python
+      }
     }
   ],
   "routes": [
@@ -11,10 +15,5 @@
       "src": "/(.*)",
       "dest": "wsgi_app.py"
     }
-  ],
-  "functions": {
-    "wsgi_app.py": {
-      "runtime": "python3.9"  // <--- กำหนดเวอร์ชัน Python ที่นี่
-    }
-  }
+  ]
 }
