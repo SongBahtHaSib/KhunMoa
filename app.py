@@ -80,14 +80,19 @@ class_names = [
 # 4. ฟังก์ชันสำหรับการรับ Webhook จาก LINE
 # ----------------------------------------------------------------------
 # นี่คือ Endpoint ที่ LINE จะส่งข้อมูล (ข้อความ, รูปภาพ) มาให้ Chatbot ของคุณ
-@app.route("/callback", methods=['POST'])
+@app.route("/callback", methods=['GET', 'POST'])
 def callback():
     # ดึงค่า X-Line-Signature จาก Header เพื่อยืนยันว่าเป็น Request จาก LINE จริงๆ
-    signature = request.headers['X-Line-Signature']
-    # ดึง Body ของ Request (ข้อมูลที่ LINE ส่งมา)
+    signature = request.headers.get('X-Line-Signature') # ใช้ .get() เพื่อป้องกัน Error ถ้าไม่มี Signature ใน GET Request
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body) # บันทึก Body ลงใน Log (มีประโยชน์ในการ Debug)
 
+    # ถ้าเป็น GET Request (สำหรับการ Verify Webhook หรือ Health Check)
+    if request.method == 'GET':
+        print("Received GET request to /callback (for verification).")
+        return 'OK', 200 # ตอบกลับ 200 OK ทันที
+
+    # ถ้าเป็น POST Request (สำหรับ LINE Event จริงๆ)
     try:
         # ประมวลผล Webhook Event โดยใช้ Line Webhook Handler
         handler.handle(body, signature)
