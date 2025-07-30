@@ -5,8 +5,7 @@
       "src": "wsgi_app.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.9" 
+        "maxLambdaSize": "15mb"
       }
     }
   ],
@@ -15,5 +14,7 @@
       "src": "/(.*)",
       "dest": "wsgi_app.py"
     }
-  ]
+  ],
+  "installCommand": "pip install python==3.9 && pip install -r requirements.txt", 
+  "buildCommand": "echo 'Build complete'"
 }
