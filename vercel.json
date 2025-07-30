@@ -5,8 +5,8 @@
       "src": "wsgi_app.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "15mb", // เพิ่มบรรทัดนี้: กำหนดขนาด Lambda Function สูงสุด (สำหรับโมเดล)
-        "runtime": "python3.9"   // เพิ่มบรรทัดนี้: กำหนดเวอร์ชัน Python
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9" 
       }
     }
   ],
