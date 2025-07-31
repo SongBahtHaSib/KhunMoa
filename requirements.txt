@@ -1,8 +1,0 @@
-flask
-line-bot-sdk
-tensorflow
-numpy
-Pillow
-requests
-gunicorn
-vercel_python_wsgi
